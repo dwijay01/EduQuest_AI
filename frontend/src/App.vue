@@ -1,0 +1,19 @@
+<script setup>
+import { RouterView } from 'vue-router'
+import { onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
+onMounted(() => {
+  authStore.initAuth()
+})
+</script>
+
+<template>
+  <RouterView />
+</template>
+
+<style>
+/* Global styles are in assets/main.css */
+</style>
