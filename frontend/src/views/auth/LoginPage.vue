@@ -8,9 +8,23 @@ const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 
-function handleLogin() {
-  authStore.setAuth({ id: 1, name: 'User' }, 'token', 'parent')
-  router.push('/parent')
+async function handleLogin() {
+  try {
+    const data = await authStore.login(email.value, password.value)
+    const role = data.user.role
+    if (role === 'parent') {
+      // Check if parent has students
+      if (data.user.students && data.user.students.length > 0) {
+        router.push('/parent')
+      } else {
+        router.push('/onboarding')
+      }
+    } else {
+      router.push('/student')
+    }
+  } catch (err) {
+    // Error is handled in store
+  }
 }
 </script>
 
@@ -24,17 +38,21 @@ function handleLogin() {
         <p>Lanjutkan petualangan belajar putra-putri Anda.</p>
       </div>
 
+      <div v-if="authStore.error" class="error-msg">{{ authStore.error }}</div>
+
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
           <label>Email</label>
-          <input v-model="email" type="email" class="input-neon" placeholder="bunda@contoh.com">
+          <input v-model="email" type="email" class="input-neon" placeholder="bunda@contoh.com" required>
         </div>
         <div class="form-group">
           <label>Password</label>
-          <input v-model="password" type="password" class="input-neon" placeholder="••••••••">
+          <input v-model="password" type="password" class="input-neon" placeholder="••••••••" required>
         </div>
         
-        <button type="submit" class="btn btn-primary w-full">Masuk Sekarang</button>
+        <button type="submit" class="btn btn-primary w-full" :disabled="authStore.loading">
+          {{ authStore.loading ? 'Memproses...' : 'Masuk Sekarang' }}
+        </button>
       </form>
       
       <p class="auth-footer">
@@ -72,6 +90,10 @@ function handleLogin() {
 
 .auth-footer { margin-top: 2rem; color: #94a3b8; font-size: 0.9rem; }
 .auth-footer a { font-weight: 700; text-decoration: none; }
+
+.error-msg { background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 0.8rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
+
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @keyframes wave { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
 </style>

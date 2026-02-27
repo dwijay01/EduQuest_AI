@@ -13,13 +13,13 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('../views/auth/LoginPage.vue'),
-      meta: { title: 'Login - EduBridge AI' }
+      meta: { title: 'Login - EduBridge AI', guest: true }
     },
     {
       path: '/register',
       name: 'register',
       component: () => import('../views/auth/RegisterPage.vue'),
-      meta: { title: 'Daftar - EduBridge AI' }
+      meta: { title: 'Daftar - EduBridge AI', guest: true }
     },
     {
       path: '/onboarding',
@@ -40,10 +40,22 @@ const router = createRouter({
       meta: { title: 'Dashboard - EduBridge AI', requiresAuth: true }
     },
     {
+      path: '/learn',
+      name: 'explore',
+      component: () => import('../views/student/ExplorePage.vue'),
+      meta: { title: 'Peta Belajar - EduBridge AI', requiresAuth: true }
+    },
+    {
       path: '/learn/:topicId',
       name: 'learningSession',
       component: () => import('../views/student/LearningSession.vue'),
       meta: { title: 'Belajar - EduBridge AI', requiresAuth: true }
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/student/ProfilePage.vue'),
+      meta: { title: 'Profil - EduBridge AI', requiresAuth: true }
     },
     {
       path: '/parent',
@@ -66,9 +78,24 @@ const router = createRouter({
   ]
 })
 
-// Update document title on route change
-router.beforeEach((to, from, next) => {
+// Navigation guards
+router.beforeEach(async (to, from, next) => {
+  // Update document title
   document.title = to.meta.title || 'EduBridge AI'
+
+  const token = localStorage.getItem('auth_token')
+
+  // Protected route — no token
+  if (to.meta.requiresAuth && !token) {
+    return next({ name: 'login', query: { redirect: to.fullPath } })
+  }
+
+  // Guest-only route (login/register) — already logged in
+  if (to.meta.guest && token) {
+    const role = localStorage.getItem('user_role')
+    return next(role === 'parent' ? '/parent' : '/student')
+  }
+
   next()
 })
 

@@ -8,8 +8,22 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=edubridge
+      - DB_USERNAME=edubridge
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_STORE=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
     networks:
       - edubridge-network
     working_dir: /var/www
@@ -22,15 +36,41 @@ services:
       POSTGRES_PASSWORD: secret
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
     ports:
       - "5432:5432"
     networks:
       - edubridge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edubridge -d edubridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:alpine
+    ports:
+      - "6379:6379"
     networks:
       - edubridge-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    networks:
+      - edubridge-network
+    depends_on:
+      - app
 
   n8n:
     image: n8nio/n8n
@@ -51,7 +91,8 @@ services:
     networks:
       - edubridge-network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 networks:
   edubridge-network:

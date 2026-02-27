@@ -9,9 +9,21 @@ const step = ref(1)
 
 const formData = ref({ name: '', email: '', phone: '', password: '' })
 
-function handleRegister() {
-  authStore.setAuth({ id: 1, name: formData.value.name }, 'token', 'parent')
-  router.push('/onboarding')
+async function handleRegister() {
+  try {
+    await authStore.register({
+      name: formData.value.name,
+      email: formData.value.email,
+      phone: formData.value.phone,
+      password: formData.value.password,
+    })
+    router.push('/onboarding')
+  } catch (err) {
+    // Error is handled in store
+    if (authStore.error && authStore.error.includes('email')) {
+      step.value = 1 // go back to email step
+    }
+  }
 }
 </script>
 
@@ -28,6 +40,8 @@ function handleRegister() {
         <h2>{{ step === 1 ? 'Buat Akun' : 'Detail Akun' }}</h2>
         <p>Mulai perjalanan belajar anak Anda.</p>
       </div>
+
+      <div v-if="authStore.error" class="error-msg">{{ authStore.error }}</div>
 
       <form @submit.prevent="step === 1 ? step++ : handleRegister()" class="auth-form">
         <div v-if="step === 1" class="step-group anim-fade-up">
@@ -49,11 +63,13 @@ function handleRegister() {
           </div>
           <div class="form-group mb-4">
             <label>Password</label>
-            <input v-model="formData.password" type="password" class="input-neon" placeholder="••••••••" required>
+            <input v-model="formData.password" type="password" class="input-neon" placeholder="••••••••" minlength="6" required>
           </div>
           <div class="flex gap-md">
             <button type="button" @click="step--" class="btn btn-glass" style="flex:1">←</button>
-            <button type="submit" class="btn btn-primary" style="flex:2">Selesai ✨</button>
+            <button type="submit" class="btn btn-primary" :disabled="authStore.loading" style="flex:2">
+              {{ authStore.loading ? 'Memproses...' : 'Selesai ✨' }}
+            </button>
           </div>
         </div>
       </form>
@@ -111,4 +127,8 @@ function handleRegister() {
 
 .auth-footer { margin-top: 2rem; color: #94a3b8; font-size: 0.9rem; }
 .auth-footer a { font-weight: 700; text-decoration: none; }
+
+.error-msg { background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 0.8rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
+
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>

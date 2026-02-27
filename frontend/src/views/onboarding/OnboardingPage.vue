@@ -26,6 +26,7 @@ const availableInterests = [
 
 const selectedInterests = ref([])
 const error = ref('')
+const saving = ref(false)
 
 function toggleInterest(id) {
   const index = selectedInterests.value.indexOf(id)
@@ -43,6 +44,7 @@ function validateStep() {
   if (step.value === 2) {
     if (!childData.value.name) { error.value = 'Mohon isi nama anak'; return false }
     if (!childData.value.age) { error.value = 'Mohon isi umur'; return false }
+    if (!childData.value.grade) { error.value = 'Mohon pilih kelas'; return false }
   }
   if (step.value === 3 && selectedInterests.value.length < 3) {
     error.value = 'Pilih minimal 3 minat'; return false
@@ -54,8 +56,30 @@ function nextStep() {
   if (validateStep() && step.value < totalSteps) step.value++
 }
 
-function finishOnboarding() {
-  router.push('/baseline-test')
+async function finishOnboarding() {
+  saving.value = true
+  error.value = ''
+  try {
+    // Step 1: Create the student
+    const student = await studentStore.createStudent({
+      name: childData.value.name,
+      grade: parseInt(childData.value.grade),
+      birth_date: null,
+      interests: selectedInterests.value,
+    })
+
+    // Step 2: Save onboarding (interests)
+    await studentStore.saveOnboarding(student.id, {
+      interests: selectedInterests.value,
+      grade: parseInt(childData.value.grade),
+    })
+
+    router.push('/baseline-test')
+  } catch (err) {
+    error.value = studentStore.error || 'Gagal menyimpan data. Coba lagi.'
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -139,6 +163,7 @@ function finishOnboarding() {
           <div class="summary-card card-glass">
             <div class="row"><span>Nama</span> <strong>{{ childData.name }}</strong></div>
             <div class="row"><span>Umur</span> <strong>{{ childData.age }} Thn</strong></div>
+            <div class="row"><span>Kelas</span> <strong>{{ childData.grade }}</strong></div>
             <div class="row"><span>Minat</span> <strong>{{ selectedInterests.length }} Topik</strong></div>
           </div>
         </div>
@@ -153,7 +178,9 @@ function finishOnboarding() {
         <div v-else></div>
         
         <button v-if="step < totalSteps" @click="nextStep" class="btn btn-primary">Lanjut</button>
-        <button v-else @click="finishOnboarding" class="btn btn-primary">Mulai Tes ✨</button>
+        <button v-else @click="finishOnboarding" class="btn btn-primary" :disabled="saving">
+          {{ saving ? 'Menyimpan...' : 'Mulai Tes ✨' }}
+        </button>
       </div>
     </div>
   </div>
@@ -225,6 +252,8 @@ select.input-neon option { background: var(--bg-surface); }
 
 .error-msg { background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 0.8rem; border-radius: 0.5rem; margin-top: 1rem; text-align: center; }
 .text-muted { color: #64748b; font-size: 0.9rem; }
+
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @media (max-width: 480px) {
   .grid-2 { grid-template-columns: 1fr; }

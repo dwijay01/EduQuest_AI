@@ -13,11 +13,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Create admin user
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Admin EduBridge',
+            'email' => 'admin@edubridge.ai',
+            'role' => 'admin',
+        ]);
+
+        // Create test parent user
+        User::factory()->create([
+            'name' => 'Orang Tua Test',
+            'email' => 'parent@edubridge.ai',
+            'role' => 'parent',
+        ]);
+
+        // Seed subjects and topics
+        $this->call([
+            SubjectSeeder::class,
+            TopicSeeder::class,
         ]);
     }
 }
