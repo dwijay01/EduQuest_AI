@@ -33,24 +33,24 @@ sleep 10
 
 # 6. Run Laravel setup inside container
 echo "📦 Installing backend dependencies..."
-docker exec edubridge_ai-app-1 composer install --no-dev --optimize-autoloader
+docker exec edubridge-ai-app-1 composer install --no-dev --optimize-autoloader
 
 echo "🔑 Generating app key..."
-docker exec edubridge_ai-app-1 php artisan key:generate --force
+docker exec edubridge-ai-app-1 php artisan key:generate --force
 
 echo "📋 Running migrations..."
-docker exec edubridge_ai-app-1 php artisan migrate --force
+docker exec edubridge-ai-app-1 php artisan migrate --force
 
 echo "🌱 Running seeders..."
-docker exec edubridge_ai-app-1 php artisan db:seed --force
+docker exec edubridge-ai-app-1 php artisan db:seed --force
 
 echo "⚙️ Caching config..."
-docker exec edubridge_ai-app-1 php artisan config:cache
-docker exec edubridge_ai-app-1 php artisan route:cache
-docker exec edubridge_ai-app-1 php artisan view:cache
+docker exec edubridge-ai-app-1 php artisan config:cache
+docker exec edubridge-ai-app-1 php artisan route:cache
+docker exec edubridge-ai-app-1 php artisan view:cache
 
 echo "🔗 Creating storage link..."
-docker exec edubridge_ai-app-1 php artisan storage:link 2>/dev/null || true
+docker exec edubridge-ai-app-1 php artisan storage:link 2>/dev/null || true
 
 echo ""
 echo "✅ EduBridge AI deployed successfully!"
