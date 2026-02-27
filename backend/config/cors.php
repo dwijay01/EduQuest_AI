@@ -16,6 +16,7 @@ return [
         env('FRONTEND_URL', 'http://localhost:5173'),
         'http://localhost:5173',
         'http://localhost:8000',
+        'https://edu.alipayment.id',
     ],
 
     'allowed_origins_patterns' => [],
