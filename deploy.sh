@@ -33,7 +33,7 @@ sleep 10
 
 # 6. Run Laravel setup inside container
 echo "📦 Installing backend dependencies..."
-docker exec edubridge-ai-app-1 composer install --no-dev --optimize-autoloader
+docker exec edubridge-ai-app-1 composer install --optimize-autoloader
 
 echo "🔑 Generating app key..."
 docker exec edubridge-ai-app-1 php artisan key:generate --force
